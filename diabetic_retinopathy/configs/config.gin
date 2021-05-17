@@ -1,0 +1,275 @@
+
+######
+# Main
+######
+
+main.models = [
+        {
+			'model': 			'inception_like',
+			'module_1_filters': [32, 32, 32, 32, 32, 32],
+			'module_2_filters': [4, 4, 4, 4, 4, 4],
+			'number_of_dense_units': 40,
+			'dropout_rate': 0.7,
+			'kernel_initializer': 'he_normal',
+			'dataset_handle': 'base',
+            'class_weights_scale':   1.5
+		}]
+
+    # main.models examples --------->
+    # 1. Resnet50 model specs
+    #   {
+    #       'model':                 'resnet50',
+    #       'first_fine_tune_layer': 160,    # (optional), default: 150
+    #       'dropout_rate':          0.3,    # (optional), default: 0.2
+    #       'dataset_handle':        'base', 
+    #       'class_weights_scale':   2.0     # (optional), default: 0.0
+    #   }
+    # 2. Inceptionv3 model specs
+    #   {
+    #       'model':                 'inceptionv3',
+    #       'first_fine_tune_layer': 310,    # (optional), default: 300
+    #       'dropout_rate':          0.1,    # (optional), default: in TransferLearningModel.dropout_rate
+    #       'dataset_handle':        'base', 
+    #       'class_weights_scale':   2.0     # (optional), default: 0.0
+    #   }
+    # 3. 'inception_like' custom model specs
+    #   {
+    #       'model': 'inception_like',
+    #       'module_1_filters':      [5,5,5, 5,5,5], # (optional), default: [25,25,25, 25,25,25]
+    #       'module_2_filters':      [6,6,6, 6,6,6], # (optional), default: [25,25,25, 25,25,25]
+    #       'kernel_initializer':    'he_uniform',   # (optional), default: 'glorot_uniform'
+    #       'number_of_dense_units': 200,            # (optional), default: 250
+    #       'dropout_rate':          0.4,            # (optional), default: 0.2
+    #       'dataset_handle':        'base', 
+    #       'class_weights_scale':   2.0             # (optional), default: 0.0
+    #   }
+    # 4. 'vgg_like' custom model specs
+    #   {
+    #       'model':                 'vgg_like',
+    #       'n_blocks':              4,              # (optional), default: 1
+    #       'base_filters':          4,              # (optional), default: 8
+    #       'number_of_dense_units': 64,             # (optional), default: 32
+    #       'dropout_rate':          0.4,            # (optional), default: 0.2
+    #       'dataset_handle':        'base', 
+    #       'class_weights_scale':   2.0             # (optional), default: 0.0
+    #   }
+
+    # 1. dictionary or list of dictionaries.
+    # 2. Each dictionary contains compulsory 'model' key which can take the values: 'inception_like', 'vgg_like', 'resnet50', 'inceptionv3'.
+    # 3. The transfer learning models like 'resnet50' and 'inceptionv3' might contain the optional key 'first_fine_tune_layer'
+    #    which specifies the layer index from where fine tuning starts. If this not specified then default
+    #    value for 'resnet50' and 'inceptionv3' is used.
+    # 4. The transfer learning models like 'resnet50' and 'inceptionv3' might contain the optional key 'dropout_rate'
+    #    which specifies the dropout rate of the dropout_layer before the classification layer in
+    #    transfer learning models.
+    # 5. The normal models like 'inception_like' or 'vgg_like' need only the 'model' key in the dictionary.
+    # 6. The normal models like 'inception_like' or 'vgg_like' might contain the optional keys 'dropout_rate' and
+    #    'number_of_dense_units'. Model 'inception_like' might contain optional keys 'module_1_filters',
+    #    'module_2_filters' and kernel_initializer'. Model 'vgg_like' might contain optional keys 'n_blocks' and 'base_filters'
+    # 7. 'class_weights_scale': Scale the loss of a prediction by class, for unbalanced datasets. IDRID sample count by class: [134, 20, 136, 74, 49]
+    #    The weights are calculated in relation to the most common class: class_weight = max_class_count/class_count
+    #    Values other then 1.0 scale these weights, >1.0: Weighting is amplified, <1.0: Weighting is reduced; 0.0 disables weighting.
+    # 8. 'dataset_handle': Which dataset to use for this model. Datasets are created before the first model is trained.
+    #    Under 'DatasetLoader.dataset_specifications' is it possible to specify datasets to be created, if a dataset is created then
+    #    it is saved in 'DatasetLoader.tfrecords_directory' and can be reused, just use the name it was created with and set
+    #    'DatasetLoader.tfrecords_operation' to 'read'.
+
+main.deep_visualization = False  # Make GradCAM
+
+    # If no model is trained but one is evaluated, then the path to a checkpoint of a model has to given here.
+    # Directory or file. File like: '/path/to/checkpoints/ckpt-04', 
+    # a checkpoint 'file' like 'ckpt-04' consists of index and data files, but the prefix is given.
+    # If a directory is given, then the latest checkpoint is loaded.
+main.evaluation_checkpoint = ''
+
+    # Empty string in 'main.resume_checkpoint' and 'main.resume_model_path' means no resuming.
+    # If multiple models are to be trained, then only the first one in the list 'main.model' is resumed from checkpoint.
+    # If 'resume_model_path' is empty, then 'resume_checkpoint' is evaluated as the path to a checkpoint dir. or file,
+    # else 'resume_checkpoint' is evaluated as the checkpoint prefix, like 'ckpt-04', of the to be loaded checkpoint in the model dir..    
+    # 'main.resume_model_path' is the path to the directory of a model, which contains the directories 'checkpoint' and 'summaries'.
+    # If 'main.resume_model_path' is given, then it is used to load the train/val. summaries, so that they can be continued.
+    # Resuming is only implemented for non-hyperparameter_tuning training.
+main.resume_checkpoint = ''
+main.resume_model_path = ''
+
+main.use_hyperparameter_tuning = False
+
+
+
+######
+# Tune
+######
+
+    # Hyperparameters for Tensorboard HParams
+hyperparameter_tuning.transfer_learning_params = {
+    'dataset_handle':   ['base', 'slight-sampling-u3-o0_9', 'strong-sampling-u5-o0_9'], # ['base', 'slight-sampling-u3-o0_9', 'strong-sampling-u5-o0_9'], # Grid Search
+    'dropout_rate': {
+        'min': 0.0,
+        'max': 1.0,  # Must be float
+        'n_search': 2 # n_search Uniform Random search
+    }
+}
+hyperparameter_tuning.inception_like_params =   {
+    'dataset_handle':   ['base', 'slight-sampling-u3-o0_9', 'strong-sampling-u5-o0_9'], # ['base', 'slight-sampling-u3-o0_9', 'strong-sampling-u5-o0_9'], # Grid Search
+    'module_1_filters':   [2, 4, 8, 16, 32, 64, 128], # [2, 4, 8, 16, 32, 64, 128], # Grid Search
+    'module_2_filters':   [2, 4, 8, 16, 32, 64, 128], # [2, 4, 8, 16, 32, 64, 128], # Grid Search
+    'kernel_initializer': ['glorot_uniform', 'glorot_normal', 'he_uniform', 'he_normal'],  # Grid Search
+    'dense_num_units': {
+        'min':      10,
+        'max':      300, # Must be int
+        'n_search': 10    # n_search Uniform Random search
+    },
+    'dropout_rate': {
+        'min':      0.0,
+        'max':      1.0, # Must be float
+        'n_search': 10    # n_search Uniform Random search
+    }
+}
+hyperparameter_tuning.vgg_like_params =   {
+    'dataset_handle':   ['base', 'slight-sampling-u3-o0_9', 'strong-sampling-u5-o0_9'], # ['base', 'slight-sampling-u3-o0_9', 'strong-sampling-u5-o0_9'], # Grid Search
+    'block_num_units': [2, 4, 8, 16, 32, 64, 128], # [2, 4, 8, 16, 32, 64, 128], # Grid Search
+    'base_filters':    [2, 4, 8, 16, 32, 64, 128], # [2, 4, 8, 16, 32, 64, 128], # Grid Search
+    'dense_num_units':  {
+        'min':      10,
+        'max':      300, # Must be int
+        'n_search': 10    # n_search Uniform Random search
+    },
+    'dropout_rate': {
+        'min':      0.0,
+        'max':      1.0, # Must be float
+        'n_search': 10    # n_search Uniform Random search
+    }
+}
+
+
+
+#######
+# Train
+#######
+
+Trainer.epochs =                 1 #1e5
+Trainer.log_interval =           1 #1e4
+Trainer.checkpoint_interval =    500 #1e4
+Trainer.learning_rate =          0.001
+
+    # Fine-tuning:
+Trainer.finetune_learning_rate = 0.0001
+Trainer.finetune_epochs        = 1 # Setting to zero disables fine-tuning.
+
+
+    # Early-stopping:
+    # Number of epochs between early-stopping tests. Setting this to zero disables early-stopping.
+Trainer.early_stopping_test_interval = 0
+    # Types:
+    # 0: Relative: Stopping if the metric does not improve between epochs over a value of patience (number of) epochs by a value of minimum_delta.
+    # 1: Average: Stopping if the average of the metric over a value of patience (number of) epochs is not an improvement by at least the value of minimum_delta.
+Trainer.early_stopping_trigger_type = 1
+Trainer.early_stopping_metric =       'mcc' # One of: ['Accuracy', 'Precision', 'Recall', 'F1', 'Specificity', 'MCC']
+Trainer.patience =                    1000
+Trainer.minimum_delta =               1e-5
+
+
+
+#---------------
+# Input pipeline
+#---------------
+
+###############
+# DatasetLoader
+###############
+
+DatasetLoader.dataset_name = 'idrid'
+DatasetLoader.dataset_directory = 'C:\\Universitat Stuttgart\\Semester 3\\Practical Course - Deep Learning Lab\\Workspace\\Sprint-01\\dl-lab-2020-team10\\dataset\\IDRID_dataset\\'
+    # '/home/data/IDRID_dataset'
+    # '/content/drive/My Drive/dl_lab/datasets/idrid/'
+    # 'C:\\Universitat Stuttgart\\Semester 3\\Practical Course - Deep Learning Lab\\Workspace\\Sprint-01\\dl-lab-2020-team10\\dataset\\IDRID_dataset\\'
+    # '/content/gdrive/MyDrive/DL Lab/dl-lab-2020-team10/dataset/IDRID_dataset'
+
+DatasetLoader.tfrecords_directory = 'C:\\Universitat Stuttgart\\Semester 3\\Practical Course - Deep Learning Lab\\Workspace\\Sprint-01\\dl-lab-2020-team10\\dataset\\TFRecord_IDRID\\'
+    # '/home/RUS_CIP/st169851/DL_Lab/dataset/TFRecord_IDRID/'
+    # '/content/drive/My Drive/dl_lab/datasets/idrid/tfrecords/sampled/'
+    # 'C:\\Universitat Stuttgart\\Semester 3\\Practical Course - Deep Learning Lab\\Workspace\\Sprint-01\\dl-lab-2020-team10\\dataset\\TFRecord_IDRID\\'
+    # '/content/gdrive/MyDrive/DL Lab/dl-lab-2020-team10/dataset/TFRecord_IDRID/'
+
+DatasetLoader.tfrecords_operation = 'read' # Choices are: 'create' and 'read'.
+DatasetLoader.training_dataset_ratio = 0.8
+DatasetLoader.caching = True
+DatasetLoader.batch_size = 32
+
+    # Add elements to the list to create multiple datasets with different sample-ratios.
+    # Empty list leads to no creation.
+DatasetLoader.dataset_specifications = [
+    {
+        'name': 'base',
+        'undersample_ratio': 0.0,
+        'oversample_ratio': 0.0
+    },
+    {
+        'name': 'u3o0_9',
+        'undersample_ratio': 3.0,
+        'oversample_ratio': 0.9
+    },
+    {
+        'name': 'u5o0_9',
+        'undersample_ratio': 5.0,
+        'oversample_ratio': 0.9
+    }
+]
+    # name: Under which name shall the dataset be saved/referenced; 
+    # dashes are not recommended, because dashes are used as seperators in the model name.
+
+    # undersample_ratio: [1, ...]; 0.0 disables undersampling
+    # How many samples are the more common classes allowed to have more than the least common class.
+    # Max sample count of class = sample count of least common class * undersample_ratio
+    # 1.0: All classes have the same number of samples as the least common class
+    # 2.0: Classes with more samples have at most twice as many samples as the least common class
+    # Examples:
+    # 5.0 -> [80 16 80 59 39] = [0.2919708  0.05839416 0.2919708  0.21532847 0.14233577] %
+    # 3.0 -> [48 16 48 48 39] = [0.24120603 0.08040201 0.24120603 0.24120603 0.1959799 ] %
+    # 2.0 -> [32 16 32 32 32] = [0.22222222 0.11111111 0.22222222 0.22222222 0.22222222] %
+
+    # oversample_ratio: [0, 1]; 0.0 disables oversampling
+    # Target ratio between most common class and other classes.
+    # target sample count = oversample_ratio * sample count of most common class
+    # 1.0: Each class shall have the same number of samples as the most common class.
+    # 0.5: All classes have at least half as many samples as the most common class.
+    # Classes with more samples than the target are left unchanged.
+    # New samples of a class are created by image augmentation. 
+
+
+
+###############
+# Preprocessing
+###############
+
+preprocess_tensorflow_dataset.img_height = 28
+preprocess_tensorflow_dataset.img_width =  28
+
+preprocess_resize.img_height = 256
+preprocess_resize.img_width =  256
+preprocess_resize.preserve_aspect_ratio = False
+
+preprocess_resample.target_dist = [0.2, 0.2, 0.2, 0.2, 0.2]
+
+
+
+#-------
+# Models
+#-------
+
+#########
+# Layers
+#########
+
+vgg_block.kernel_size = (3, 3)
+
+
+
+#-----------
+# Evaluation
+#-----------
+
+##########
+# Ensemble
+##########
+
